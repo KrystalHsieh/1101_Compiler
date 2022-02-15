@@ -1,0 +1,4 @@
+flex test.l
+bison -dy test.y
+gcc lex.yy.c y.tab.c
+a.exe < 1.txt

@@ -1,0 +1,212 @@
+#include<iostream>
+#include<string>
+#include<vector>
+
+using namespace std;
+char s[1000];
+int end_flag = 0;
+vector<string> ans;
+void error();
+string isId(int dot, string str);
+bool isDot(string str);
+bool isLBR(string str);
+int isRBR(string str);
+void isStrlit(string str);
+void primary_tail(string str);
+void primary(string str);
+void stmts(string str);
+void stmt(string str);
+
+void printAns(){
+	//cout << "++++++print ans+++++" << endl;
+	for(int i = 0; i < ans.size(); i++){
+		cout << ans[i] << endl;
+	}
+	return;
+}
+
+void error(){
+	if(end_flag == 1){
+		return;
+	}
+	end_flag = 1;
+	cout << "invalid input" << endl;
+	return;
+}
+
+string isId(int dot, string str){
+	bool ch = false;
+	if((str[dot] >= 65 && str[dot] <= 90))	ch = true;
+	else if(str[dot] >= 97 && str[dot] <= 122)	ch = true;
+	else if(str[dot] == 95)	ch = true;
+	if(ch == false){
+		//cout << "cut at isId round1" << endl;
+		return "";
+	}
+	int start = dot, k = start + 1;
+	while(1){
+		ch = false;
+		if((str[k] >= 65 && str[k] <= 90))	ch = true;
+		else if(str[k] >= 97 && str[k] <= 122)	ch = true;
+		else if(str[k] == 95)	ch = true;
+		else if(str[k] >= 48 && str[k] <= 57)	ch = true;
+		if(ch == false){
+			if(str[k] != 34 && str[k] != 41 && str[k] != 46 && str[k] != 40){
+				error();
+				return "";
+			}
+			string outID = "";
+			for(int j = start; j < k; j++){
+				outID = outID + str[j];
+			}
+			//cout << "find ID: " << outID << endl;
+			return outID;
+		}
+		if(k == str.length() - 1){
+			string outID = "";
+			for(int j = start; j <= k; j++){
+				outID = outID + str[j];
+			}
+			return outID;
+		}
+		k ++;
+	}
+}
+
+bool isDot(string str){
+	if(str[0] == 46){
+		return true;
+	}
+	return false;
+}
+bool isLBR(string str){
+	if(str[0] == 40){
+		return true;
+	}
+	return false;
+}
+int isRBR(string str){
+	size_t position = str.find(")");
+	if(position != string::npos){
+		return position;
+	}
+	return -1;
+}
+
+void primary_tail(string str){
+	//cout << "enter tail with string: " << str << endl;
+	if(str == ""){
+		return;	
+	}
+	if(end_flag == 1){
+		return;
+	}
+	if(isDot(str)){
+		string cut = isId(1, str);
+		if(cut != ""){
+			ans.push_back("DOT .");
+			//cout << "DOT ." << endl;
+			ans.push_back("ID " + cut);
+			//cout << "ID " << cut << endl;
+			string nstr = str.substr(cut.length() + 1);
+			//cout << "-----run string: " << nstr << endl;
+			primary_tail(nstr);
+		}
+		else{
+			error();
+			return;
+		}
+	}
+	else if(isLBR(str)){
+		int lo = isRBR(str);
+		if(lo != -1){
+			ans.push_back("LBR (");
+			//cout << "LBR (" << endl;
+			string nstr1 = str.substr(1, lo - 1);
+			//cout << "-----run string: " << nstr1 << endl;
+			stmt(nstr1);
+			string nstr2 = str.substr(lo + 1);
+			//cout << "-----run string: " << nstr2 << endl;
+			primary_tail(nstr2);
+			ans.push_back("RBR )");
+			//cout << "RBR )" << endl;
+		}
+		else{
+			error();
+			return;
+		} 	
+	}
+	else{
+		error();
+		return;
+	}	
+}
+
+void primary(string str){
+	if(end_flag == 1){
+		return;
+	}
+	string cut = isId(0, str);
+	if(cut != ""){
+		ans.push_back("ID " + cut);
+		//cout << "ID " << cut << endl;
+		string nstr3 = str.substr(cut.length());
+		//cout << "-----run string: " << nstr3 << endl;
+		primary_tail(nstr3);
+	}
+	else{
+		error();
+		return;
+	}
+}
+
+void stmt(string str){
+	if(str == ""){
+		return;
+	}
+	if(end_flag == 1){
+		return;
+	}
+	if(isId(0, str) != ""){
+		primary(str);
+	}
+	else if(str[0] == 34 && str[str.length() - 1] == 34){
+		ans.push_back("STRLIT " + str);
+		//cout << "STRLIT " << str << endl;
+		return;
+	}
+	else{
+		error();
+		return;
+	}
+}
+
+void stmts(string str){
+	if(str == ""){
+		return;
+	}
+	if(end_flag == 1){
+		return;
+	} 
+	if(isId(0, str) != "" || str[0] == 34){
+		stmt(str);
+		stmts("");
+	}
+	else{
+		error();
+		return;
+	}	
+}
+
+int main(){
+	while(gets(s) && s[0]){
+		ans.clear();
+		end_flag = 0;
+		string str = s;
+		stmts(str);
+		if(end_flag != 1){
+			printAns();
+		}
+	}
+	return 0;
+} 
